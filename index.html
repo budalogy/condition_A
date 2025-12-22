@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Study 2 條件A｜ChatGPT 搜尋摘要模擬</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1520;
+      --panel2:#121a27;
+      --text:#e8eef7;
+      --muted:#a9b4c4;
+      --line:#263246;
+      --accent:#78a6ff;
+      --ok:#4ade80;
+      --warn:#fbbf24;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial, sans-serif;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(120,166,255,.14), transparent 55%),
+                  radial-gradient(1000px 600px at 80% 25%, rgba(74,222,128,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      font-family: var(--sans);
+      line-height:1.5;
+    }
+    header{
+      padding:18px 20px;
+      border-bottom:1px solid var(--line);
+      background: rgba(15,21,32,.75);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top:0;
+      z-index: 20;
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:0 16px;}
+    .titleRow{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+    }
+    h1{
+      font-size:16px; margin:0 0 6px 0; letter-spacing:.2px;
+    }
+    .sub{
+      font-size:13px; color:var(--muted); margin:0;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border:1px solid var(--line);
+      border-radius:999px; background:rgba(18,26,39,.6);
+      color:var(--muted); font-size:12px; white-space:nowrap;
+    }
+    .dot{width:8px; height:8px; border-radius:50%; background:var(--ok);}
+    main{padding:18px 0 36px 0;}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:16px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr;}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(18,26,39,.85), rgba(15,21,32,.85));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHd{
+      padding:14px 14px 10px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      background: rgba(18,26,39,.65);
+    }
+    .cardHd .label{
+      font-size:13px; color:var(--muted);
+      display:flex; align-items:center; gap:10px;
+    }
+    .pill{
+      font-family: var(--mono);
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(120,166,255,.10);
+      color: var(--accent);
+    }
+    .btn{
+      appearance:none; border:1px solid var(--line);
+      background: rgba(11,15,20,.45);
+      color: var(--text);
+      border-radius: 12px;
+      padding:8px 10px;
+      cursor:pointer;
+      font-size:13px;
+    }
+    .btn:hover{border-color:#3a4b66;}
+    .chat{
+      height: 540px;
+      display:flex; flex-direction:column;
+    }
+    .msgs{
+      padding:14px;
+      overflow:auto;
+      flex:1;
+    }
+    .msg{
+      display:flex;
+      gap:10px;
+      margin: 0 0 12px 0;
+      align-items:flex-start;
+    }
+    .avatar{
+      width:32px; height:32px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid var(--line);
+      background: rgba(11,15,20,.35);
+      flex: 0 0 auto;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .bubble{
+      max-width: 820px;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding:10px 12px;
+      background: rgba(11,15,20,.25);
+      white-space: pre-wrap;
+    }
+    .role{
+      font-size:12px;
+      color: var(--muted);
+      margin: 0 0 6px 0;
+    }
+    .user .bubble{background: rgba(120,166,255,.09); border-color: rgba(120,166,255,.22);}
+    .assistant .bubble{background: rgba(74,222,128,.07); border-color: rgba(74,222,128,.20);}
+    .composer{
+      border-top:1px solid var(--line);
+      padding:10px;
+      display:flex;
+      gap:10px;
+      background: rgba(18,26,39,.55);
+    }
+    .input{
+      flex:1;
+      border:1px solid var(--line);
+      border-radius: 12px;
+      padding:10px 12px;
+      background: rgba(11,15,20,.35);
+      color: var(--text);
+      font-size: 14px;
+      outline:none;
+    }
+    .input:focus{border-color:#3a4b66;}
+    .hint{
+      padding:10px 14px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top:1px dashed rgba(38,50,70,.8);
+      background: rgba(15,21,32,.35);
+    }
+
+    .sources{
+      padding: 12px 14px 14px 14px;
+    }
+    .task{
+      padding: 12px 14px 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .task b{color:var(--text);}
+    .sourceItem{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(11,15,20,.25);
+      padding:12px;
+      margin: 10px 0;
+    }
+    .sTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom: 8px;
+    }
+    .sTitle{
+      font-size: 14px;
+      margin:0;
+    }
+    .tag{
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .snippet{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    details{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(11,15,20,.25);
+      padding: 10px 12px;
+      margin-top: 10px;
+    }
+    summary{
+      cursor:pointer;
+      color: var(--text);
+      font-size: 13px;
+      list-style: none;
+    }
+    summary::-webkit-details-marker{display:none;}
+    .mini{
+      margin: 8px 0 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    footer{
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align:center;
+    }
+    .kbd{
+      font-family: var(--mono);
+      border:1px solid var(--line);
+      background: rgba(11,15,20,.35);
+      padding:2px 6px;
+      border-radius: 8px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <div class="titleRow">
+      <div>
+        <h1>Study 2｜條件 A（高卸載）：ChatGPT 搜尋摘要問答模擬</h1>
+        <p class="sub">目的：讓受試者在「答案先被包好」的情境下閱讀 AI 整合摘要（可選看來源）。此頁為固定腳本模擬，不連線 OpenAI。</p>
+      </div>
+      <div class="badge" title="條件A：先給 AI 整合答案，再提供可選來源清單">
+        <span class="dot"></span>
+        條件A：AI 整合摘要（高卸載）
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="grid">
+
+      <!-- Chat card -->
+      <section class="card chat" aria-label="ChatGPT 問答區">
+        <div class="cardHd">
+          <div class="label">
+            <span class="pill">ChatGPT</span>
+            <span>問答介面（模擬）</span>
+          </div>
+          <button class="btn" id="btnReset" type="button">重置對話</button>
+        </div>
+
+        <div class="msgs" id="msgs" role="log" aria-live="polite"></div>
+
+        <div class="composer">
+          <input class="input" id="q" placeholder="輸入你想問的問題（例如：藍光眼鏡真的有效嗎？）" />
+          <button class="btn" id="btnSend" type="button">送出</button>
+        </div>
+
+        <div class="hint">
+          快捷鍵：<span class="kbd">Enter</span> 送出；<span class="kbd">Shift</span> + <span class="kbd">Enter</span> 換行（本版僅單行輸入）。
+        </div>
+      </section>
+
+      <!-- Sources card -->
+      <aside class="card" aria-label="搜尋結果來源包">
+        <div class="cardHd">
+          <div class="label">
+            <span class="pill">Sources</span>
+            <span>搜尋結果列表（可選看）</span>
+          </div>
+          <button class="btn" id="btnFillDemo" type="button" title="自動送出示範問題">一鍵示範</button>
+        </div>
+
+        <div class="task">
+          <b>情境：</b>你是系學會宣傳幹部，要發貼文提醒同學睡眠與眼睛疲勞。請判斷「藍光眼鏡是否能改善睡眠/眼睛疲勞」，並形成建議（本頁只做問答模擬）。  
+        </div>
+
+        <div class="sources" id="sources"></div>
+
+        <details>
+          <summary>研究者備註（受試者不一定要看）</summary>
+          <p class="mini">
+            條件 A 的操弄重點是「先給整合答案」，降低受試者自行整合與查證的必要感。此頁未蒐集點擊行為，僅用視覺呈現模擬刺激。
+          </p>
+        </details>
+      </aside>
+
+    </div>
+
+    <footer>
+      若要佈署到 GitHub Pages：把此檔案命名為 <span class="kbd">index.html</span> 放到 repo 根目錄，Settings → Pages → Branch 選 <span class="kbd">main</span> / <span class="kbd">root</span>。
+    </footer>
+  </div>
+</main>
+
+<script>
+  // ====== Condition A scripted assistant answer ======
+  const scriptedAssistant = (userQuestion) => {
+    // 你可以依研究需要，固定回覆（最利於刺激一致性）
+    // 也可根據關鍵字做小幅度客製，但仍是腳本，不連網。
+    const base =
+`以下是基於你目前看到的資料包，所做的「整合性摘要」（供參考）：
+
+1) 關於睡眠：藍光確實可能影響生理時鐘（例如抑制褪黑激素），但「藍光眼鏡是否能顯著改善睡眠」的研究結果並不一致；若有效，效果通常偏小且高度受使用情境影響（例如：睡前暴露光強度、螢幕亮度、配戴時段與個體差異）。
+
+2) 關於眼睛疲勞：疲勞與乾澀更常見的原因是長時間近距離用眼、眨眼變少、環境乾燥、螢幕反光與休息不足。濾藍光鏡片可能帶來主觀舒適感，但不一定能處理疲勞的根因。
+
+3) 實務建議（優先順序）：若你在意睡眠與疲勞，通常先做「降低亮度/夜間模式、睡前 60 分鐘降刺激、固定作息、用眼休息（例如 20-20-20）」更有一致性；藍光眼鏡可視為輔助，而非主要方案。
+
+4) 不確定性：研究分歧可能來自鏡片濾除比例、是否同時搭配降低亮度、受試者原本睡眠狀況，以及研究方法差異。建議把結論視為「暫定」，並留意適用條件。`;
+
+    // Optional: if question mentions "一定/立刻/保證" emphasize uncertainty
+    const q = (userQuestion || "").trim();
+    if (q.includes("一定") || q.includes("立刻") || q.includes("保證")) {
+      return base + `
+
+補充：任何宣稱「立刻改善／保證有效」的說法都需要特別小心，因為效果往往取決於情境與個體差異。`;
+    }
+    return base;
+  };
+
+  // ====== Sources list (fixed stimuli) ======
+  const sources = [
+    { id: 1, type: "研究型機構", title: "藍光與生理時鐘：什麼會影響入睡時間？",
+      snippet: "藍光會抑制褪黑激素分泌，但影響程度與光強度、照射時間、個體差異相關。日常使用情境下，螢幕亮度與距離差異很大，效果不一定一致。" },
+    { id: 2, type: "大學醫院衛教", title: "眼睛疲勞的成因：不是只有藍光",
+      snippet: "眼睛乾澀與疲勞常見原因包含長時間近距離用眼、眨眼次數下降、空氣乾燥、螢幕反光與姿勢不良。更關鍵的是用眼休息與環境調整。" },
+    { id: 3, type: "同儕審查研究整理", title: "濾藍光眼鏡與睡眠：研究結果為何分歧？",
+      snippet: "在嚴格控制條件下可能觀察到小幅改善，也有研究發現差異不顯著。差異可能來自鏡片濾除比例、是否同時搭配降低亮度與受試者睡眠狀況。" },
+    { id: 4, type: "政府/公共衛生", title: "改善睡眠的優先順序：作息與光照管理",
+      snippet: "建議睡前 1 小時降低螢幕亮度、避免強光、固定起床時間、避免臨睡前大量咖啡因。若仍有困擾，需評估壓力、運動量與睡眠環境。" },
+    { id: 5, type: "品牌內容行銷", title: "戴上藍光眼鏡，睡眠立刻變好？",
+      snippet: "宣稱可顯著提升睡眠品質，並引用『研究證明』字眼，但未清楚交代研究條件與樣本；內容以使用者見證與產品規格為主。" },
+    { id: 6, type: "自媒體專欄", title: "我試了兩週藍光眼鏡：精神變好、眼睛不酸了",
+      snippet: "以個人經驗描述改善，但同時做了早睡、降低亮度、少滑短影音等改變；未區分哪些因素造成改善。" },
+    { id: 7, type: "論壇討論", title: "藍光眼鏡是不是智商稅？",
+      snippet: "意見分歧，討論多以主觀感受為主，少有可驗證資料。" },
+    { id: 8, type: "科普媒體", title: "藍光、夜間模式、濾鏡：哪一種最值得做？",
+      snippet: "整理多種做法的成本效益：降低亮度與調整作息通常更有一致性；濾藍光鏡片效果受使用情境影響，提醒勿把舒適感等同睡眠改善。" },
+  ];
+
+  // ====== UI helpers ======
+  const elMsgs = document.getElementById("msgs");
+  const elQ = document.getElementById("q");
+  const btnSend = document.getElementById("btnSend");
+  const btnReset = document.getElementById("btnReset");
+  const btnFillDemo = document.getElementById("btnFillDemo");
+  const elSources = document.getElementById("sources");
+
+  function escapeHTML(str){
+    return str.replace(/[&<>"']/g, (m) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function addMessage(role, text){
+    const row = document.createElement("div");
+    row.className = `msg ${role}`;
+
+    const av = document.createElement("div");
+    av.className = "avatar";
+    av.textContent = role === "user" ? "你" : "AI";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    const r = document.createElement("div");
+    r.className = "role";
+    r.textContent = role === "user" ? "使用者" : "ChatGPT（模擬輸出）";
+
+    const body = document.createElement("div");
+    body.innerHTML = escapeHTML(text);
+
+    bubble.appendChild(r);
+    bubble.appendChild(body);
+
+    row.appendChild(av);
+    row.appendChild(bubble);
+
+    elMsgs.appendChild(row);
+    elMsgs.scrollTop = elMsgs.scrollHeight;
+  }
+
+  function resetChat(){
+    elMsgs.innerHTML = "";
+    addMessage("assistant",
+`你現在處於「條件A：高卸載」情境。
+請像在 ChatGPT 一樣輸入問題。我會回覆固定的整合摘要（模擬），並且你可以選擇要不要閱讀右側的搜尋結果列表。`);
+  }
+
+  function send(){
+    const q = elQ.value.trim();
+    if(!q) return;
+    addMessage("user", q);
+
+    // Simulate short thinking delay
+    btnSend.disabled = true;
+    setTimeout(() => {
+      addMessage("assistant", scriptedAssistant(q));
+      btnSend.disabled = false;
+      elQ.value = "";
+      elQ.focus();
+    }, 250);
+  }
+
+  function renderSources(){
+    elSources.innerHTML = sources.map(s => `
+      <div class="sourceItem">
+        <div class="sTop">
+          <p class="sTitle">#${s.id}　${escapeHTML(s.title)}</p>
+          <span class="tag">${escapeHTML(s.type)}</span>
+        </div>
+        <p class="snippet">${escapeHTML(s.snippet)}</p>
+      </div>
+    `).join("");
+  }
+
+  // Events
+  btnSend.addEventListener("click", send);
+  btnReset.addEventListener("click", resetChat);
+  btnFillDemo.addEventListener("click", () => {
+    elQ.value = "藍光眼鏡真的能改善睡眠或眼睛疲勞嗎？我該怎麼建議同學？";
+    send();
+  });
+  elQ.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      send();
+    }
+  });
+
+  // Init
+  renderSources();
+  resetChat();
+</script>
+</body>
+</html>
